@@ -12,6 +12,7 @@ public class MainManager : MonoBehaviour
     public Rigidbody Ball;
 
     public Text ScoreText;
+
     public GameObject GameOverText;
 
     public TextMeshProUGUI PlayerNameText;
@@ -23,42 +24,53 @@ public class MainManager : MonoBehaviour
 
     void Start()
     {
+        // PLAYER NAME
         if (GameManager.Instance != null)
         {
             PlayerNameText.text =
-                "Player: " + GameManager.Instance.playerName;
+                "Player: " +
+                GameManager.Instance.playerName;
         }
 
-        if (DataManager.Instance != null)
-        {
-            BestScoreText.text =
-                "Best: " +
-                DataManager.Instance.bestPlayerName +
-                " - " +
-                DataManager.Instance.bestScore;
-        }
+        // BEST SCORE
+        UpdateBestScoreText();
 
         const float step = 0.6f;
-        int perLine = Mathf.FloorToInt(4.0f / step);
 
-        int[] pointCountArray = new[] { 1, 1, 2, 2, 5, 5 };
+        int perLine =
+            Mathf.FloorToInt(4.0f / step);
+
+        int[] pointCountArray =
+            new[] { 1, 1, 2, 2, 5, 5 };
 
         for (int i = 0; i < LineCount; ++i)
         {
             for (int x = 0; x < perLine; ++x)
             {
                 Vector3 position =
-                    new Vector3(-1.5f + step * x, 2.5f + i * 0.3f, 0);
+                    new Vector3(
+                        -1.5f + step * x,
+                        2.5f + i * 0.3f,
+                        0
+                    );
 
-                var brick = Instantiate(BrickPrefab, position, Quaternion.identity);
+                var brick =
+                    Instantiate(
+                        BrickPrefab,
+                        position,
+                        Quaternion.identity
+                    );
 
-                brick.PointValue = pointCountArray[i];
-                brick.onDestroyed.AddListener(AddPoint);
+                brick.PointValue =
+                    pointCountArray[i];
+
+                brick.onDestroyed
+                    .AddListener(AddPoint);
             }
         }
     }
 
-    private void Update()
+    void Update()
     {
         if (!m_Started)
         {
@@ -66,19 +78,24 @@ public class MainManager : MonoBehaviour
             {
                 m_Started = true;
 
-                float randomDirection = Random.Range(-1.0f, 1.0f);
-                Vector3 forceDir = new Vector3(randomDirection, 1, 0);
+                float randomDirection =
+                    Random.Range(-1.0f, 1.0f);
+
+                Vector3 forceDir =
+                    new Vector3(
+                        randomDirection,
+                        1,
+                        0
+                    );
+
                 forceDir.Normalize();
 
                 Ball.transform.SetParent(null);
-                Ball.AddForce(forceDir * 2.0f, ForceMode.VelocityChange);
-            }
-        }
-        else if (m_GameOver)
-        {
-            if (Input.GetKeyDown(KeyCode.Space))
-            {
-                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+
+                Ball.AddForce(
+                    forceDir * 2.0f,
+                    ForceMode.VelocityChange
+                );
             }
         }
     }
@@ -86,25 +103,48 @@ public class MainManager : MonoBehaviour
     void AddPoint(int point)
     {
         m_Points += point;
-        ScoreText.text = $"Score : {m_Points}";
+
+        ScoreText.text =
+            "Score : " + m_Points;
     }
 
-    // ✔ GAME OVER MODIFICADO AQUI
     public void GameOver()
     {
+        if (m_GameOver)
+        {
+            return;
+        }
+
         m_GameOver = true;
+
         GameOverText.SetActive(true);
 
         if (DataManager.Instance != null)
         {
-            if (m_Points > DataManager.Instance.bestScore)
-            {
-                DataManager.Instance.bestScore = m_Points;
-                DataManager.Instance.bestPlayerName =
-                    GameManager.Instance.playerName;
+            DataManager.Instance.AddScore(
+                GameManager.Instance.playerName,
+                m_Points
+            );
 
-                DataManager.Instance.SaveData();
-            }
+            UpdateBestScoreText();
+        }
+    }
+
+    void UpdateBestScoreText()
+    {
+        if (
+            DataManager.Instance != null &&
+            DataManager.Instance.scores.Count > 0
+        )
+        {
+            ScoreEntry bestScore =
+                DataManager.Instance.scores[0];
+
+            BestScoreText.text =
+                "Best: " +
+                bestScore.playerName +
+                " : " +
+                bestScore.score;
         }
     }
 }

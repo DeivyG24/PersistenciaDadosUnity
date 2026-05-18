@@ -6,7 +6,7 @@ public class GameManager : MonoBehaviour
 
     public string playerName;
 
-    private void Awake()
+    void Awake()
     {
         if (Instance != null)
         {

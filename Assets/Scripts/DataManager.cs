@@ -1,12 +1,16 @@
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEngine;
 
 public class DataManager : MonoBehaviour
 {
     public static DataManager Instance;
 
-    public string bestPlayerName;
-    public int bestScore;
+    public string playerName;
+
+    public List<ScoreEntry> scores =
+        new List<ScoreEntry>();
 
     string savePath;
 
@@ -29,17 +33,44 @@ public class DataManager : MonoBehaviour
         LoadData();
     }
 
+    public void AddScore(
+        string playerName,
+        int score
+    )
+    {
+        ScoreEntry newScore =
+            new ScoreEntry();
+
+        newScore.playerName =
+            playerName;
+
+        newScore.score =
+            score;
+
+        scores.Add(newScore);
+
+        scores = scores
+            .OrderByDescending(s => s.score)
+            .Take(5)
+            .ToList();
+
+        SaveData();
+    }
+
     public void SaveData()
     {
-        SaveData data = new SaveData();
+        SaveData data =
+            new SaveData();
 
-        data.playerName = bestPlayerName;
-        data.highScore = bestScore;
+        data.scores = scores;
 
         string json =
             JsonUtility.ToJson(data, true);
 
-        File.WriteAllText(savePath, json);
+        File.WriteAllText(
+            savePath,
+            json
+        );
     }
 
     public void LoadData()
@@ -52,8 +83,7 @@ public class DataManager : MonoBehaviour
             SaveData data =
                 JsonUtility.FromJson<SaveData>(json);
 
-            bestPlayerName = data.playerName;
-            bestScore = data.highScore;
+            scores = data.scores;
         }
     }
 }

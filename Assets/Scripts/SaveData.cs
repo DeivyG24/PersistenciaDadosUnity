@@ -1,6 +1,8 @@
+using System.Collections.Generic;
+
 [System.Serializable]
 public class SaveData
 {
-    public string playerName;
-    public int highScore;
+    public List<ScoreEntry> scores =
+        new List<ScoreEntry>();
 }
